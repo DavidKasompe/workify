@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  tasks         Task[]    @relation("TaskOwner")
+  assignedTasks Task[]    @relation("TaskAssignees")
+  boards        Board[]   @relation("BoardMembers")
+  ownedBoards   Board[]   @relation("BoardOwner")
+}
+
+model Task {
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  priority    Priority    @default(MEDIUM)
+  status      TaskStatus  @default(TODO)
+  dueDate     DateTime?
+  recurring   Recurring?
+  progress    Int         @default(0)
+  owner       User        @relation("TaskOwner", fields: [ownerId], references: [id])
+  ownerId     String
+  assignees   User[]      @relation("TaskAssignees")
+  board       Board?      @relation(fields: [boardId], references: [id])
+  boardId     String?
+  parent      Task?       @relation("SubTasks", fields: [parentId], references: [id])
+  parentId    String?
+  subtasks    Task[]      @relation("SubTasks")
+  attachments Attachment[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Board {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  owner       User      @relation("BoardOwner", fields: [ownerId], references: [id])
+  ownerId     String
+  members     User[]    @relation("BoardMembers")
+  tasks       Task[]
+  columns     Column[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Column {
+  id        String    @id @default(cuid())
+  name      String
+  order     Int
+  board     Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Attachment {
+  id        String    @id @default(cuid())
+  name      String
+  url       String
+  type      String
+  task      Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId    String
+  createdAt DateTime  @default(now())
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+}
+
+enum Recurring {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
