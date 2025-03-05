@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Plus, Calendar, Clock, AlertCircle, ChevronDown, Paperclip, Trash2 } from 'lucide-react';
+import { X, Plus, ChevronDown, Paperclip, Trash2 } from 'lucide-react';
 import { Button } from './Button';
 import { TaskData } from '@/app/types';
 import { ModalPortal } from './ModalPortal';

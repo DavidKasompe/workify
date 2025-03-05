@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { prisma } from '@/app/lib/prisma';
+import { prisma } from '@/lib/prisma';
 
 export async function PUT(request: Request) {
   try {
@@ -30,8 +30,7 @@ export async function PUT(request: Request) {
   }
 }
 
-// Add a GET handler to fetch user profile
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -47,7 +46,6 @@ export async function GET(request: Request) {
         id: true,
         name: true,
         email: true,
-        image: true,
         createdAt: true,
       },
     });

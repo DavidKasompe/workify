@@ -13,11 +13,11 @@ import {
   DragStartEvent,
   useDroppable
 } from '@dnd-kit/core';
-import { Button } from '@/app/components/Button';
-import { TaskModal } from '@/app/components/TaskModal';
-import { TaskDetail } from '@/app/components/TaskDetail';
-import { DraggableTask } from '@/app/components/DraggableTask';
-import { TaskFilters, TaskFilters as TaskFiltersType } from '@/app/components/TaskFilters';
+import { Button } from '@/components/Button';
+import { TaskModal } from '@/components/TaskModal';
+import { TaskDetail } from '@/components/TaskDetail';
+import { DraggableTask } from '@/components/DraggableTask';
+import { TaskFilters, TaskFilters as TaskFiltersType } from '@/components/TaskFilters';
 import { Task } from '@/app/types';
 
 const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];

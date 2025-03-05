@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Button } from '@/app/components/Button';
+import { Button } from '@/components/Button';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -53,6 +53,7 @@ export default function RegisterPage() {
 
       router.push('/auth/login?registered=true');
     } catch (error) {
+      console.error('Registration error:', error);  
       setError('An error occurred. Please try again.');
     }
   };

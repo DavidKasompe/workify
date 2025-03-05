@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { prisma } from '@/app/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function GET(
@@ -14,7 +14,6 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Extract the id parameter at the beginning
     const params = await Promise.resolve(context.params);
     const id = params.id;
 
@@ -53,15 +52,13 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Extract the id parameter at the beginning
     const params = await Promise.resolve(context.params);
     const id = params.id;
 
     const body = await req.json();
     const { title, description, priority, dueDate, recurring, status, progress, subtasks } = body;
 
-    // First, update the main task
-    const task = await prisma.task.update({
+    await prisma.task.update({
       where: {
         id: id,
         ownerId: session.user.id,
@@ -80,9 +77,7 @@ export async function PUT(
       },
     });
 
-    // Then, handle subtasks updates
     if (subtasks) {
-      // Delete existing subtasks
       await prisma.task.deleteMany({
         where: {
           parentId: id,
@@ -105,7 +100,6 @@ export async function PUT(
       }
     }
 
-    // Fetch the updated task with new subtasks
     const updatedTask = await prisma.task.findUnique({
       where: {
         id: id,
@@ -136,11 +130,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Extract the id parameter at the beginning
     const params = await Promise.resolve(context.params);
     const id = params.id;
 
-    // Delete the task and all its subtasks
     await prisma.task.delete({
       where: {
         id: id,

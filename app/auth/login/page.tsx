@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Button } from '@/app/components/Button';
+import { Button } from '@/components/Button';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -44,6 +44,7 @@ export default function LoginPage() {
       router.push('/dashboard');
       router.refresh();
     } catch (error) {
+      console.error('Login error:', error);
       setError('An error occurred. Please try again.');
     }
   };

@@ -5,7 +5,6 @@ import { CSS } from '@dnd-kit/utilities';
 import { CheckSquare, Clock, MoreVertical, Trash2, Edit2, X } from 'lucide-react';
 import { useState } from 'react';
 import { Task } from '@/app/types';
-import { TaskDetail } from './TaskDetail';
 
 interface DraggableTaskProps {
   task: Task;
@@ -15,7 +14,6 @@ interface DraggableTaskProps {
 }
 
 export function DraggableTask({ task, index, onUpdate, onDelete }: DraggableTaskProps) {
-  const [showDetail, setShowDetail] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -52,27 +50,6 @@ export function DraggableTask({ task, index, onUpdate, onDelete }: DraggableTask
       default:
         return 'bg-gray-50 border-gray-200 hover:border-gray-300';
     }
-  };
-
-  const getPriorityIcon = (priority: string) => {
-    switch (priority) {
-      case 'HIGH':
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
-      case 'MEDIUM':
-        return <AlertCircle className="w-4 h-4 text-yellow-500" />;
-      case 'LOW':
-        return <AlertCircle className="w-4 h-4 text-blue-500" />;
-      default:
-        return null;
-    }
-  };
-
-  const formatDate = (date: string | null) => {
-    if (!date) return null;
-    return new Date(date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    });
   };
 
   console.log(`Rendering draggable task: ${taskId} at index ${index}`);

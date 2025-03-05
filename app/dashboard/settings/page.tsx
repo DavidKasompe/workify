@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import { User, Palette, Sun, Moon, Monitor, AlertCircle, CheckCircle } from 'lucide-react';
-import { Button } from '@/app/components/Button';
+import { Button } from '@/components/Button';
 
 const settingsSections = [
   {

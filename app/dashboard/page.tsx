@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Plus, Users, Clock, CheckSquare, MoreVertical, Loader2 } from 'lucide-react';
-import { Button } from '@/app/components/Button';
+import { Button } from '@/components/Button';
 import Link from 'next/link';
-import { BoardModal } from '@/app/components/BoardModal';
+import { BoardModal } from '@/components/BoardModal';
 
 interface Board {
   id: string;

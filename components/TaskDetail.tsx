@@ -5,7 +5,6 @@ import {
   Clock, 
   CheckSquare, 
   Paperclip,
-  ChevronDown,
   Download,
   Trash2,
   Edit2,

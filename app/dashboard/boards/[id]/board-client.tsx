@@ -14,12 +14,12 @@ import {
   DragOverEvent,
   useDroppable,
 } from '@dnd-kit/core';
-import { Plus, Users, MoreVertical, Loader2 } from 'lucide-react';
-import { Button } from '@/app/components/Button';
-import { TaskModal } from '@/app/components/TaskModal';
-import { DraggableTask } from '@/app/components/DraggableTask';
-import { Task } from '@/app/types';
-import { Breadcrumb } from '@/app/components/Breadcrumb';
+import { Plus, Loader2 } from 'lucide-react';
+import { Button } from '@/components/Button';
+import { TaskModal } from '@/components/TaskModal';
+import { DraggableTask } from '@/components/DraggableTask';
+import { Task, TaskData } from '@/app/types';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 interface Column {
   id: string;
@@ -67,7 +67,6 @@ export function BoardClient({ id }: BoardClientProps) {
   const [board, setBoard] = useState<Board | null>(null);
   const [loading, setLoading] = useState(true);
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
-  const [showBoardMenu, setShowBoardMenu] = useState(false);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [activeContainer, setActiveContainer] = useState<string | null>(null);
   const [hoveredContainer, setHoveredContainer] = useState<string | null>(null);
@@ -98,7 +97,7 @@ export function BoardClient({ id }: BoardClientProps) {
       
       
       if (data && data.tasks) {
-        data.tasks = data.tasks.map(task => ({
+        data.tasks = data.tasks.map((task: Task) => ({
           ...task,
           id: String(task.id) 
         }));
@@ -112,7 +111,7 @@ export function BoardClient({ id }: BoardClientProps) {
     }
   };
 
-  const handleCreateTask = async (taskData: any) => {
+  const handleCreateTask = async (taskData: TaskData) => {
     try {
       const response = await fetch('/api/tasks', {
         method: 'POST',

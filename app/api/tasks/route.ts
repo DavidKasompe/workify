@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { prisma } from '@/app/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function GET() {
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
       body = await req.json();
     } catch (e) {
       return NextResponse.json(
-        { error: 'Invalid request body' },
+        { error: `Invalid request body: ${e}` },
         { status: 400 }
       );
     }

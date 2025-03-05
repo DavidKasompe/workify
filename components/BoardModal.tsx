@@ -28,6 +28,7 @@ export function BoardModal({ isOpen, onClose, onSubmit }: BoardModalProps) {
       setDescription('');
       onClose();
     } catch (error) {
+      console.error('Board creation error:', error);
       setError('Failed to create board. Please try again.');
     } finally {
       setIsSubmitting(false);
