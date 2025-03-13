@@ -8,25 +8,59 @@ export async function PUT(request: Request) {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
-      return new NextResponse('Unauthorized', { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { name, email } = await request.json();
+
+    // Validate input
+    if (!name?.trim()) {
+      return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+    }
+
+    if (!email?.trim()) {
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    }
+
+    // Check if email is already taken by another user
+    if (email !== session.user.email) {
+      const existingUser = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true },
+      });
+
+      if (existingUser && existingUser.id !== session.user.id) {
+        return NextResponse.json(
+          { error: 'Email is already taken' },
+          { status: 400 }
+        );
+      }
+    }
 
     const updatedUser = await prisma.user.update({
       where: {
         id: session.user.id,
       },
       data: {
-        name,
-        email,
+        name: name.trim(),
+        email: email.trim(),
       },
     });
 
-    return NextResponse.json(updatedUser);
+    return NextResponse.json({
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+      },
+      message: 'Profile updated successfully',
+    });
   } catch (error) {
     console.error('Error updating user profile:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to update profile' },
+      { status: 500 }
+    );
   }
 }
 

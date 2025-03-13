@@ -12,7 +12,7 @@ export function ModalPortal({ children, isOpen }: ModalPortalProps) {
   useEffect(() => {
     setMounted(true);
     
-    // Prevent scrolling on body when modal is open
+    
     if (isOpen) {
       document.body.style.overflow = 'hidden';
     }

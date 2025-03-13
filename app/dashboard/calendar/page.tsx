@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Loader2 } from 'lucide-react';
-import { 
-  DndContext, 
+import { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight, Plus, Loader2 } from "lucide-react";
+import {
+  DndContext,
   DragOverlay,
   useSensor,
   useSensors,
@@ -11,32 +11,33 @@ import {
   TouchSensor,
   DragEndEvent,
   DragStartEvent,
-  useDroppable
-} from '@dnd-kit/core';
-import { Button } from '@/components/Button';
-import { TaskModal } from '@/components/TaskModal';
-import { TaskDetail } from '@/components/TaskDetail';
-import { DraggableTask } from '@/components/DraggableTask';
-import { TaskFilters, TaskFilters as TaskFiltersType } from '@/components/TaskFilters';
-import { Task } from '@/app/types';
+  useDroppable,
+} from "@dnd-kit/core";
+import { Button } from "@/components/Button";
+import { TaskModal } from "@/components/TaskModal";
+import { TaskDetail } from "@/components/TaskDetail";
+import { DraggableTask } from "@/components/DraggableTask";
+import {
+  TaskFilters,
+  TaskFilters as TaskFiltersType,
+} from "@/components/TaskFilters";
+import { Task } from "@/app/types";
 
-const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function generateCalendarDays(year: number, month: number) {
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
   const days = [];
-  
-  
+
   for (let i = 0; i < firstDay.getDay(); i++) {
     days.push(null);
   }
-  
-  
+
   for (let i = 1; i <= lastDay.getDate(); i++) {
     days.push(new Date(year, month, i));
   }
-  
+
   return days;
 }
 
@@ -54,22 +55,21 @@ export default function CalendarPage() {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [boards, setBoards] = useState<Board[]>([]);
-  const [defaultBoardId, setDefaultBoardId] = useState('');
+  const [defaultBoardId, setDefaultBoardId] = useState("");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showTaskDetail, setShowTaskDetail] = useState(false);
   const [filters, setFilters] = useState<TaskFiltersType>({
     status: [],
     priority: [],
-    search: '',
+    search: "",
   });
 
-  
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 5 }
+      activationConstraint: { distance: 5 },
     }),
     useSensor(TouchSensor, {
-      activationConstraint: { delay: 250, tolerance: 5 }
+      activationConstraint: { delay: 250, tolerance: 5 },
     })
   );
 
@@ -84,25 +84,25 @@ export default function CalendarPage() {
   }, [currentDate]);
 
   useEffect(() => {
-    
     let result = [...tasks];
 
-    
     if (filters.status.length > 0) {
-      result = result.filter(task => filters.status.includes(task.status));
+      result = result.filter((task) => filters.status.includes(task.status));
     }
 
-    
     if (filters.priority.length > 0) {
-      result = result.filter(task => filters.priority.includes(task.priority));
+      result = result.filter((task) =>
+        filters.priority.includes(task.priority)
+      );
     }
 
-    
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
-      result = result.filter(task =>
-        task.title.toLowerCase().includes(searchLower) ||
-        (task.description && task.description.toLowerCase().includes(searchLower))
+      result = result.filter(
+        (task) =>
+          task.title.toLowerCase().includes(searchLower) ||
+          (task.description &&
+            task.description.toLowerCase().includes(searchLower))
       );
     }
 
@@ -111,29 +111,36 @@ export default function CalendarPage() {
 
   const fetchBoards = async () => {
     try {
-      const response = await fetch('/api/boards');
-      if (!response.ok) throw new Error('Failed to fetch boards');
+      const response = await fetch("/api/boards");
+      if (!response.ok) throw new Error("Failed to fetch boards");
       const data = await response.json();
       setBoards(data);
-      
-      
+
       if (data.length > 0) {
         setDefaultBoardId(data[0].id);
       }
     } catch (error) {
-      console.error('Error fetching boards:', error);
+      console.error("Error fetching boards:", error);
     }
   };
 
   const fetchTasks = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/tasks');
-      if (!response.ok) throw new Error('Failed to fetch tasks');
+      const response = await fetch("/api/tasks");
+      if (!response.ok) throw new Error("Failed to fetch tasks");
       const data = await response.json();
-      setTasks(data);
+
+      // Ensure all tasks have proper date handling
+      const processedTasks = data.map((task: Task) => ({
+        ...task,
+        id: String(task.id),
+        dueDate: task.dueDate ? new Date(task.dueDate).toISOString() : null,
+      }));
+
+      setTasks(processedTasks);
     } catch (error) {
-      console.error('Error fetching tasks:', error);
+      console.error("Error fetching tasks:", error);
     } finally {
       setIsLoading(false);
     }
@@ -141,68 +148,78 @@ export default function CalendarPage() {
 
   const handleCreateTask = async (taskData: any) => {
     try {
-      
+      // Ensure we have a valid date with time set to noon (to avoid timezone issues)
+      let dueDate = taskData.dueDate;
       if (selectedDate && !taskData.dueDate) {
-        taskData.dueDate = selectedDate;
+        dueDate = new Date(selectedDate);
+        dueDate.setHours(12, 0, 0, 0);
+      } else if (taskData.dueDate) {
+        dueDate = new Date(taskData.dueDate);
+        if (isNaN(dueDate.getTime())) {
+          dueDate = null;
+        }
       }
-      
-      
+
       if (!taskData.boardId && defaultBoardId) {
         taskData.boardId = defaultBoardId;
       }
-      
-      
+
       const apiData = {
         ...taskData,
-        dueDate: taskData.dueDate ? new Date(taskData.dueDate).toISOString() : null,
-        status: 'TODO' 
+        dueDate: dueDate ? dueDate.toISOString() : null,
+        status: "TODO",
       };
-      
-      console.log('Creating task with data:', apiData);
-      
-      const response = await fetch('/api/tasks', {
-        method: 'POST',
+
+      console.log("Creating task with data:", apiData);
+
+      const response = await fetch("/api/tasks", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(apiData),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error('Server error:', errorData);
+        console.error("Server error:", errorData);
         throw new Error(`Failed to create task: ${response.status}`);
       }
-      
+
       await fetchTasks();
       setShowNewTaskModal(false);
       setSelectedDate(null);
     } catch (error) {
-      console.error('Error creating task:', error);
-      alert('Failed to create task. Please try again.');
+      console.error("Error creating task:", error);
+      alert("Failed to create task. Please try again.");
     }
   };
 
   const getTasksForDate = (date: Date | null) => {
     if (!date) return [];
-    
-    return filteredTasks.filter(task => {
+
+    return filteredTasks.filter((task) => {
       if (!task.dueDate) return false;
       const taskDate = new Date(task.dueDate);
+      // Compare only the date part (year, month, day), ignoring time
       return (
-        taskDate.getDate() === date.getDate() &&
+        taskDate.getFullYear() === date.getFullYear() &&
         taskDate.getMonth() === date.getMonth() &&
-        taskDate.getFullYear() === date.getFullYear()
+        taskDate.getDate() === date.getDate()
       );
     });
   };
 
   const goToPreviousMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1)
+    );
   };
 
   const goToNextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1)
+    );
   };
 
   const isToday = (date: Date | null) => {
@@ -212,77 +229,68 @@ export default function CalendarPage() {
   };
 
   const formatDateId = (date: Date): string => {
-    return date.toISOString().split('T')[0]; 
+    return date.toISOString().split("T")[0];
   };
 
-  
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     const taskId = String(active.id);
-    const task = tasks.find(t => String(t.id) === taskId);
-    
-   
-    document.body.classList.add('dragging');
-    
+    const task = tasks.find((t) => String(t.id) === taskId);
+
+    document.body.classList.add("dragging");
+
     if (task) {
       setActiveTask(task);
     }
   };
 
-  
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-    
-    
-    document.body.classList.remove('dragging');
-    
-    
+
+    document.body.classList.remove("dragging");
+
     setActiveTask(null);
-    
-   
+
     if (!over) return;
-    
+
     const taskId = String(active.id);
     const dateId = String(over.id);
-    
-   
-    const task = tasks.find(t => String(t.id) === taskId);
+
+    const task = tasks.find((t) => String(t.id) === taskId);
     if (!task) return;
-    
+
     try {
-      
-      const [year, month, day] = dateId.split('-').map(Number);
-      const newDueDate = new Date(year, month - 1, day); 
-      
+      const [year, month, day] = dateId.split("-").map(Number);
+      const newDueDate = new Date(year, month - 1, day);
+
       console.log(`Moving task ${taskId} to date ${newDueDate.toDateString()}`);
-      
-      
-      const updatedTasks = tasks.map(t => 
-        String(t.id) === taskId ? { ...t, dueDate: newDueDate.toISOString() } : t
+
+      const updatedTasks = tasks.map((t) =>
+        String(t.id) === taskId
+          ? { ...t, dueDate: newDueDate.toISOString() }
+          : t
       );
-      
+
       setTasks(updatedTasks);
-      
-      
+
       const response = await fetch(`/api/tasks/${taskId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dueDate: newDueDate.toISOString() }),
       });
-      
+
       if (!response.ok) {
         throw new Error(`Failed to update task date`);
       }
-      
     } catch (error) {
-      console.error('Error updating task date:', error);
-      fetchTasks(); 
+      console.error("Error updating task date:", error);
+      fetchTasks();
     }
   };
 
   const handleTaskClick = (task: Task, e: React.MouseEvent) => {
     if (!activeTask) {
-      e.stopPropagation(); 
+      e.stopPropagation();
       setSelectedTask(task);
       setShowTaskDetail(true);
     }
@@ -291,48 +299,53 @@ export default function CalendarPage() {
   const handleTaskUpdate = async (taskId: string, updates: Partial<Task>) => {
     try {
       const response = await fetch(`/api/tasks/${taskId}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(updates),
       });
 
-      if (!response.ok) throw new Error('Failed to update task');
+      if (!response.ok) throw new Error("Failed to update task");
 
-      
-      const updatedTasks = tasks.map(task => 
-        task.id === taskId ? { ...task, ...updates } : task
+      const updatedTask = await response.json();
+
+      // Update the tasks state with the new task data
+      setTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task.id === taskId ? { ...task, ...updatedTask } : task
+        )
       );
-      setTasks(updatedTasks);
-      
-      
+
+      // Update the selected task if it's currently being viewed
       if (selectedTask && selectedTask.id === taskId) {
-        setSelectedTask(prev => prev ? { ...prev, ...updates } : null);
+        setSelectedTask(updatedTask);
       }
+
+      // Close the task detail modal after successful update
+      setShowTaskDetail(false);
     } catch (error) {
-      console.error('Error updating task:', error);
+      console.error("Error updating task:", error);
+      alert("Failed to update task. Please try again.");
     }
   };
 
   const handleTaskDelete = async (taskId: string) => {
     try {
       const response = await fetch(`/api/tasks/${taskId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
-      if (!response.ok) throw new Error('Failed to delete task');
+      if (!response.ok) throw new Error("Failed to delete task");
 
-     
-      setTasks(tasks.filter(task => task.id !== taskId));
-      
-      
+      setTasks(tasks.filter((task) => task.id !== taskId));
+
       if (selectedTask && selectedTask.id === taskId) {
         setShowTaskDetail(false);
         setSelectedTask(null);
       }
     } catch (error) {
-      console.error('Error deleting task:', error);
+      console.error("Error deleting task:", error);
     }
   };
 
@@ -342,7 +355,7 @@ export default function CalendarPage() {
   };
 
   const handleSearch = (query: string) => {
-    setFilters(prev => ({ ...prev, search: query }));
+    setFilters((prev) => ({ ...prev, search: query }));
   };
 
   const handleFilterChange = (newFilters: TaskFiltersType) => {
@@ -375,7 +388,10 @@ export default function CalendarPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <h2 className="text-lg font-medium text-gray-900">
-            {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+            {currentDate.toLocaleString("default", {
+              month: "long",
+              year: "numeric",
+            })}
           </h2>
           <div className="flex items-center space-x-2">
             <button
@@ -405,13 +421,13 @@ export default function CalendarPage() {
           onDragEnd={handleDragEnd}
         >
           {}
-          <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-gray-100 overflow-hidden">
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
             {/* Days of Week */}
-            <div className="grid grid-cols-7 border-b border-gray-100">
+            <div className="grid grid-cols-7 border-b border-gray-100 dark:border-gray-800">
               {daysOfWeek.map((day) => (
                 <div
                   key={day}
-                  className="py-3 text-center text-sm font-medium text-gray-500"
+                  className="py-3 text-center text-sm font-medium text-gray-500 dark:text-gray-400"
                 >
                   {day}
                 </div>
@@ -420,7 +436,7 @@ export default function CalendarPage() {
 
             {}
             <div className="grid grid-cols-7">
-              {calendarDays.map((day, index) => (
+              {calendarDays.map((day, index) =>
                 day ? (
                   <DroppableDay
                     key={index}
@@ -433,9 +449,12 @@ export default function CalendarPage() {
                     onTaskClick={handleTaskClick}
                   />
                 ) : (
-                  <div key={index} className="min-h-[120px] border-gray-100" />
+                  <div
+                    key={index}
+                    className="min-h-[120px] border-gray-100 dark:border-gray-800"
+                  />
                 )
-              ))}
+              )}
             </div>
           </div>
 
@@ -443,7 +462,9 @@ export default function CalendarPage() {
           <DragOverlay>
             {activeTask && (
               <div className="p-3 rounded-lg border bg-white shadow-lg max-w-xs">
-                <div className="text-sm font-medium line-clamp-1">{activeTask.title}</div>
+                <div className="text-sm font-medium line-clamp-1">
+                  {activeTask.title}
+                </div>
                 {activeTask.description && (
                   <div className="text-xs text-gray-500 line-clamp-1 mt-1">
                     {activeTask.description}
@@ -484,26 +505,24 @@ export default function CalendarPage() {
   );
 }
 
-
-function DroppableDay({ 
-  day, 
-  isToday, 
+function DroppableDay({
+  day,
+  isToday,
   tasks,
   onTaskUpdate,
   onTaskDelete,
   onDateClick,
-  onTaskClick
-}: { 
-  day: Date, 
-  isToday: boolean,
-  tasks: Task[],
-  onTaskUpdate: (taskId: string, updates: Partial<Task>) => Promise<void>,
-  onTaskDelete: (taskId: string) => Promise<void>,
-  onDateClick: (date: Date) => void,
-  onTaskClick: (task: Task, e: React.MouseEvent) => void
+  onTaskClick,
+}: {
+  day: Date;
+  isToday: boolean;
+  tasks: Task[];
+  onTaskUpdate: (taskId: string, updates: Partial<Task>) => Promise<void>;
+  onTaskDelete: (taskId: string) => Promise<void>;
+  onDateClick: (date: Date) => void;
+  onTaskClick: (task: Task, e: React.MouseEvent) => void;
 }) {
-  
-  const dateId = day.toISOString().split('T')[0]; 
+  const dateId = day.toISOString().split("T")[0];
   const { setNodeRef, isOver } = useDroppable({
     id: dateId,
   });
@@ -515,36 +534,45 @@ function DroppableDay({
   return (
     <div
       className={`min-h-[120px] p-2 border relative ${
-        isToday ? 'border-indigo-500 bg-indigo-50/50' : 'border-gray-100'
-      } ${isOver ? 'bg-indigo-50 ring-2 ring-indigo-200' : ''}`}
+        isToday
+          ? "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20"
+          : "border-gray-100 dark:border-gray-800"
+      } ${
+        isOver
+          ? "bg-indigo-50 dark:bg-indigo-900/30 ring-2 ring-indigo-200 dark:ring-indigo-700"
+          : ""
+      }`}
       onClick={handleDayClick}
     >
       <div className="flex justify-between">
-        <span className={`text-sm ${
-          isToday ? 'text-indigo-600 font-medium' : 'text-gray-500'
-        }`}>
+        <span
+          className={`text-sm ${
+            isToday
+              ? "text-indigo-600 dark:text-indigo-400 font-medium"
+              : "text-gray-500 dark:text-gray-400"
+          }`}
+        >
           {day.getDate()}
         </span>
-        
+
         {tasks.length > 0 && (
-          <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">
+          <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded-full">
             {tasks.length}
           </span>
         )}
       </div>
-      
-      <div 
+
+      <div
         ref={setNodeRef}
         className="mt-2 space-y-1 max-h-[200px] overflow-y-auto"
-        onClick={e => e.stopPropagation()} 
+        onClick={(e) => e.stopPropagation()}
       >
         {tasks.map((task, taskIndex) => (
           <div
             key={task.id}
-            className="cursor-pointer" 
+            className="cursor-pointer"
             onClick={(e) => {
-              
-              if (!document.body.classList.contains('dragging')) {
+              if (!document.body.classList.contains("dragging")) {
                 onTaskClick(task, e);
               }
             }}
@@ -561,4 +589,4 @@ function DroppableDay({
       </div>
     </div>
   );
-} 
+}

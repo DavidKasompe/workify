@@ -53,7 +53,7 @@ export function TaskFilters({ onSearch, onFilterChange }: TaskFiltersProps) {
 
   return (
     <div className="space-y-4">
-      {/* Search Bar */}
+      {}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
         <input
@@ -68,7 +68,7 @@ export function TaskFilters({ onSearch, onFilterChange }: TaskFiltersProps) {
         />
       </div>
 
-      {/* Filter Button */}
+      {}
       <div className="flex items-center justify-between">
         <Button
           variant="outline"
@@ -96,10 +96,10 @@ export function TaskFilters({ onSearch, onFilterChange }: TaskFiltersProps) {
         )}
       </div>
 
-      {/* Filter Options */}
+      {}
       {isExpanded && (
         <div className="p-4 bg-white rounded-lg border border-gray-200 space-y-4">
-          {/* Status Filters */}
+          {}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Status
@@ -126,7 +126,7 @@ export function TaskFilters({ onSearch, onFilterChange }: TaskFiltersProps) {
             </div>
           </div>
 
-          {/* Priority Filters */}
+          {}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Priority
